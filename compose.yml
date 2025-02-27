@@ -31,7 +31,7 @@ services:
 
   seed-migration:
     image: ghcr.io/wildlight-tech/seed-migration
-    container_name: barsync-db-migration
+    container_name: seed-migration
     environment:
       SPRING_DATASOURCE_URL: jdbc:mysql://barsync-mysql:3306/barsync_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
       SPRING_DATASOURCE_USERNAME: root
