@@ -2,20 +2,6 @@ networks:
   events-network:
 
 services:
-  barsync-events-api:
-    image: ghcr.io/wildlight-tech/barsync-events-api:latest
-    container_name: barsync-events-api
-    ports:
-      - "8080:8080"
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://barsync-mysql:3306/barsync_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
-      SPRING_DATASOURCE_USERNAME: root
-      SPRING_DATASOURCE_PASSWORD: verysecret
-    depends_on:
-      - barsync-mysql
-    networks:
-      - events-network
-
   barsync-mysql:
     image: mysql:8.0
     container_name: barsync-mysql
@@ -27,6 +13,47 @@ services:
       - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
+    networks:
+      - events-network
+
+  barsync-db-migration:
+    image: ghcr.io/wildlight-tech/barsync-db-migration
+    container_name: barsync-db-migration
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://barsync-mysql:3306/barsync_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: verysecret
+    depends_on:
+      barsync-mysql:
+        condition: service_healthy
+    networks:
+      - events-network
+
+  seed-migration:
+    image: ghcr.io/wildlight-tech/seed-migration
+    container_name: barsync-db-migration
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://barsync-mysql:3306/barsync_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: verysecret
+    depends_on:
+      barsync-db-migration:
+        condition: service_completed_successfully
+    networks:
+      - events-network
+
+  barsync-events-api:
+    image: ghcr.io/wildlight-tech/barsync-events-api:latest
+    container_name: barsync-events-api
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://barsync-mysql:3306/barsync_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: verysecret
+    depends_on:
+      seed-migration:
+        condition: service_completed_successfully
     networks:
       - events-network
 
