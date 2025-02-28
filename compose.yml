@@ -3,16 +3,17 @@ networks:
 
 services:
   barsync-db:
-    image: mysql:8.0
+    image: mysql:latest
     container_name: barsync-db
     restart: always
     environment:
       MYSQL_ROOT_PASSWORD: verysecret
-      MYSQL_DATABASE: barsync_db
+      MYSQL_DATABASE: barsync-db
     ports:
       - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
+      - ./mysql-custom.cnf:/etc/mysql/conf.d/mysql-custom.cnf
     networks:
       - events-network
 
@@ -21,11 +22,12 @@ services:
     platform: linux/amd64
     container_name: barsync-db-migration
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://barsync-db:3306/barsync_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_URL: jdbc:mysql://localhost:3306/barsync-db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: verysecret
     depends_on:
-      - barsync-db
+      barsync-db:
+        condition: service_started
     networks:
       - events-network
 
